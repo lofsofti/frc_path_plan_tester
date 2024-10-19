@@ -91,11 +91,11 @@ def draw_vect(plt, offset, vect, c, head=0.1, alpha=None):
 
 
 
-def draw_bot(plt, location, velocity):
-	print(f"bot at {location} heading {velocity}")
+def draw_bot(plt, location, pose, velocity, rotation=None):
+	print(f"bot at {location} {pose} heading {velocity} {rotation}")
 	center_point = location.asCart()
 	center_pointp = location.asPolar()
-	heading_point = PolarVertex2D(0.5, velocity.a).asCart()
+	heading_point = PolarVertex2D(0.5, pose.a).asCart()
 	velocity_point = heading_point.addVector(velocity).asCart()
 	velocity_pointp = velocity_point.asPolar()
 	front_right = center_pointp.addVector(PolarVertex2D(0.5, velocity_pointp.a + 40.1)).asCart()
@@ -110,6 +110,20 @@ def draw_bot(plt, location, velocity):
 	plt.plot([back_right.x, front_right.x], [back_right.y, front_right.y], color='k')
 	plt.arrow(center_point.x, center_point.y, heading_point.x, heading_point.y, fc='b', ec='b', head_width=0.06, head_length=0.1,length_includes_head=True,alpha=0.3)
 	plt.arrow(center_point.x, center_point.y, velocity_point.x, velocity_point.y, fc='r', ec='r', head_width=0.12, head_length=0.2,length_includes_head=True,alpha=0.4)
+	if rotation:
+		if rotation > 0.0:
+			angle_offset = math.pi
+			front_p = front_right
+			back_p = back_left
+		else:
+			angle_offset = -math.pi
+			front_p = front_left
+			back_p = back_right
+		rotation_pointf = PolarVertex2D(rotation/2, pose.a + 90.0).asCart()
+		rotation_pointb = PolarVertex2D(rotation/2, pose.a + 270.0).asCart()
+		print(f"   rot {front_p} {rotation_pointf} {rotation} {heading_point}")
+		plt.arrow(front_p.x, front_p.y, rotation_pointf.x, rotation_pointf.y, fc='y', ec='y', head_width=0.12, head_length=0.2,length_includes_head=True,alpha=0.4)
+		plt.arrow(back_p.x, back_p.y, rotation_pointb.x, rotation_pointb.y, fc='y', ec='y', head_width=0.12, head_length=0.2,length_includes_head=True,alpha=0.4)
 
 def draw_tag(plt, location, pose):
 	p1 = location.addVector(PolarVertex2D(pose.r, pose.a+90)).asCart()
@@ -129,20 +143,20 @@ def animate_holonomic(i, state, strategy):
 	# set new heading
 	if "bot_req_rot" in state:
 		new_rot = state["bot_pose"].asPolar()
-		new_rot.r = state["bot_req_rot"].asPolar().r
+		new_rot.a = new_rot.a + state["bot_req_rot"]
 		state["bot_pose"] = new_rot
 	
 	# store/scale new input 
 	dir, rot = strategy(state)
 	if "bot_req_rot" in state:
 		pose = state["bot_pose"].asPolar()
-		last_rot = state["bot_req_rot"].asPolar()
-		new_rot = rot.asPolar()
-		if last_rot.a - new_rot.a > math.pi/8.0:
-			new_rot.a = last_rot.a - math.pi/8.0
-		elif new_rot.a - last_rot.a > math.pi/8.0:
-			new_rot.a = last_rot.a + math.pi/8.0
-		pose.a = pose.a + new_rot.a 
+		last_rot = state["bot_req_rot"]
+		new_rot = rot
+		if last_rot - new_rot > math.pi/8.0:
+			new_rot = last_rot - math.pi/8.0
+		elif new_rot - last_rot > math.pi/8.0:
+			new_rot = last_rot + math.pi/8.0
+		pose.a = pose.a + new_rot
 		state["bot_pose"] = pose
 	if "bot_req_dir" in state:
 		last_dir = state["bot_req_dir"].asPolar()
@@ -156,7 +170,7 @@ def animate_holonomic(i, state, strategy):
 	state["bot_req_dir"] = dir
 	state["bot_req_rot"] = rot
 	draw_tag(plt, state["tag_loc"], state["tag_pose"])
-	draw_bot(plt, state["bot_loc"], state["bot_pose"])
+	draw_bot(plt, state["bot_loc"], state["bot_pose"], state["bot_req_dir"], state["bot_req_rot"])
 
 def animate_nonholonomic(i, state, strategy):
 	tag_dist = state["bot_loc"].get_distance(state["tag_loc"])
@@ -168,4 +182,4 @@ def animate_nonholonomic(i, state, strategy):
 	# set new heading
 	state["bot_pose"] = strategy(state)
 	draw_tag(plt, state["tag_loc"], state["tag_pose"])
-	draw_bot(plt, state["bot_loc"], state["bot_pose"])
+	draw_bot(plt, state["bot_loc"], state["bot_pose"], state["bot_pose"])
