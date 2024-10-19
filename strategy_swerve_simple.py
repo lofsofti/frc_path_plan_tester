@@ -13,8 +13,8 @@ curr_state = {
 def strategy_simple(state):
 	speed = state["bot_loc"].get_distance(state["tag_loc"]) / 10 +0.1
 	angle = state["tag_loc"].asPolar().addVector(CartVertex2D(-state["bot_loc"].x, -state["bot_loc"].y)).asPolar().a
-	rotation = state["bot_pose"].asPolar().r - state["tag_loc"].asPolar().r
-	print(f" from {state['bot_loc'].asPolar()} to {state['tag_loc'].asPolar()} got angle {angle:.3f} rotation {rotation}") 
+	rotation = ( state["tag_pose"].asPolar().a - state["bot_pose"].asPolar().a) * 0.10
+	print(f" from {state['bot_loc'].asPolar()} to {state['tag_loc'].asPolar()} got angle {angle:.3f} rotation {rotation}")
 	return PolarVertex2D(speed, angle), rotation
 
 ani = FuncAnimation(fig, partial(animate_holonomic, state=curr_state, strategy=strategy_simple), interval=300)
