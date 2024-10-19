@@ -121,7 +121,6 @@ def draw_bot(plt, location, pose, velocity, rotation=None):
 			back_p = back_right
 		rotation_pointf = PolarVertex2D(rotation/2, pose.a + 90.0).asCart()
 		rotation_pointb = PolarVertex2D(rotation/2, pose.a + 270.0).asCart()
-		print(f"   rot {front_p} {rotation_pointf} {rotation} {heading_point}")
 		plt.arrow(front_p.x, front_p.y, rotation_pointf.x, rotation_pointf.y, fc='y', ec='y', head_width=0.12, head_length=0.2,length_includes_head=True,alpha=0.4)
 		plt.arrow(back_p.x, back_p.y, rotation_pointb.x, rotation_pointb.y, fc='y', ec='y', head_width=0.12, head_length=0.2,length_includes_head=True,alpha=0.4)
 
