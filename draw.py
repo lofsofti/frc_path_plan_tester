@@ -2,7 +2,22 @@
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 import math
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field\
+
+def run():
+	plot_ticks = 1
+	plot_axis = [
+		-10, # min x
+		10, # max y
+		-18, # min y
+		0, # max y
+	]
+	plt.axis(plot_axis)
+	plt.xticks(range(plot_axis[0],plot_axis[1],plot_ticks))
+	plt.yticks(range(plot_axis[2],plot_axis[3],plot_ticks))
+	plt.grid(True)
+	plt.show()
+
 
 @dataclass(eq=True)
 class PolarVertex2D:
@@ -102,14 +117,55 @@ def draw_tag(plt, location, pose):
 	plt.plot([p1.x, p2.x], [p1.y, p2.y], color='g')
 
 
-def animate(i, state, strategy):
-	tag_dist = state["bot_pos"].get_distance(state["tag_loc"])
-	if state["bot_pos"].y > 0 or tag_dist > 25 or tag_dist < 0.5 or state["frame"]  > 100:
+def animate_holonomic(i, state, strategy):
+	tag_dist = state["bot_loc"].get_distance(state["tag_loc"])
+	# stop simulation if at target or off the field
+	if state["bot_loc"].y > 0 or tag_dist > 25 or tag_dist < 0.5 or state["frame"]  > 100:
 		return
 	state["frame"] = state["frame"] + 1
 	# update bot location
-	state["bot_pos"] = state["bot_pos"].addVector(state["bot_dir"])
+	if "bot_req_dir" in state:
+		state["bot_loc"] = state["bot_loc"].addVector(state["bot_req_dir"])
 	# set new heading
-	state["bot_dir"] = strategy(state)
+	if "bot_req_rot" in state:
+		new_rot = state["bot_pose"].asPolar()
+		new_rot.r = state["bot_req_rot"].asPolar().r
+		state["bot_pose"] = new_rot
+	
+	# store/scale new input 
+	dir, rot = strategy(state)
+	if "bot_req_rot" in state:
+		pose = state["bot_pose"].asPolar()
+		last_rot = state["bot_req_rot"].asPolar()
+		new_rot = rot.asPolar()
+		if last_rot.a - new_rot.a > math.pi/8.0:
+			new_rot.a = last_rot.a - math.pi/8.0
+		elif new_rot.a - last_rot.a > math.pi/8.0:
+			new_rot.a = last_rot.a + math.pi/8.0
+		pose.a = pose.a + new_rot.a 
+		state["bot_pose"] = pose
+	if "bot_req_dir" in state:
+		last_dir = state["bot_req_dir"].asPolar()
+		new_dir = dir.asPolar()
+		if last_dir.a - new_dir.a > math.pi/4.0:
+			new_dir.a = last_dir.a - math.pi/4.0
+			new_dir = state["bot_pose"]
+		elif new_dir.a - last_dir.a > math.pi/4.0:
+			new_dir.a = last_dir.a + math.pi/4.0
+			new_dir = state["bot_pose"]
+	state["bot_req_dir"] = dir
+	state["bot_req_rot"] = rot
 	draw_tag(plt, state["tag_loc"], state["tag_pose"])
-	draw_bot(plt, state["bot_pos"], state["bot_dir"])
+	draw_bot(plt, state["bot_loc"], state["bot_pose"])
+
+def animate_nonholonomic(i, state, strategy):
+	tag_dist = state["bot_loc"].get_distance(state["tag_loc"])
+	if state["bot_loc"].y > 0 or tag_dist > 25 or tag_dist < 0.5 or state["frame"]  > 100:
+		return
+	state["frame"] = state["frame"] + 1
+	# update bot location
+	state["bot_loc"] = state["bot_loc"].addVector(state["bot_pose"])
+	# set new heading
+	state["bot_pose"] = strategy(state)
+	draw_tag(plt, state["tag_loc"], state["tag_pose"])
+	draw_bot(plt, state["bot_loc"], state["bot_pose"])
