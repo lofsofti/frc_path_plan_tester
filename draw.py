@@ -133,7 +133,7 @@ def draw_tag(plt, location, pose):
 def animate_holonomic(i, state, strategy):
 	tag_dist = state["bot_loc"].get_distance(state["tag_loc"])
 	# stop simulation if at target or off the field
-	if state["bot_loc"].y > 0 or tag_dist > 25 or tag_dist < 0.5 or state["frame"]  > 100:
+	if state["bot_loc"].y > 0 or tag_dist > 25 or tag_dist < 0.5 or state["frame"]  > 400:
 		return
 	state["frame"] = state["frame"] + 1
 	# update bot location
