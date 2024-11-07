@@ -92,7 +92,7 @@ def draw_vect(plt, offset, vect, c, head=0.1, alpha=None):
 
 
 def draw_bot(plt, location, pose, velocity, rotation=None):
-	print(f"bot at {location} {pose} heading {velocity} {rotation}")
+	print(f"bot at {location} {pose} heading {velocity} {rotation:.3f}")
 	center_point = location.asCart()
 	center_pointp = location.asPolar()
 	heading_point = PolarVertex2D(0.5, pose.a).asCart()
@@ -133,7 +133,7 @@ def draw_tag(plt, location, pose):
 def animate_holonomic(i, state, strategy):
 	tag_dist = state["bot_loc"].get_distance(state["tag_loc"])
 	# stop simulation if at target or off the field
-	if state["bot_loc"].y > 0 or tag_dist > 25 or tag_dist < 0.5 or state["frame"]  > 400:
+	if state["bot_loc"].y > 0 or tag_dist > 25 or tag_dist < 0.5 or state["frame"]  > 1000:
 		return
 	state["frame"] = state["frame"] + 1
 	# update bot location
