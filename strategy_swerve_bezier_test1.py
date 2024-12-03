@@ -1,7 +1,8 @@
 from functools import partial
+from functools import partial
 
 from draw import *
-
+	
 curr_state = {
 	"bot_loc": CartVertex2D(8,-12), 
 	"bot_pose": PolarVertex2D(0.5,130),
@@ -11,8 +12,8 @@ curr_state = {
 }
 
 p1 = curr_state["bot_loc"]
-p2 = CartVertex2D(8, -2)
-p3 = CartVertex2D(3, -6)
+p2 = CartVertex2D(6, -10)
+p3 = CartVertex2D(4, -4)
 p4 = curr_state["tag_loc"]
 
 def calc_bezier(t, p1, p2, p3, p4):
@@ -26,7 +27,7 @@ def home_point(target, curr, max_speed):
 	target = target.asCart()
 	curr = curr.asCart()
 	x = target.x - curr.x
-	x = min(max(x, -max_speed), max_speed)	
+	x = min(max(x, -max_speed), max_speed)
 	y = min(max(target.y - curr.y, -max_speed), max_speed)
 	return CartVertex2D(x, y)
 
